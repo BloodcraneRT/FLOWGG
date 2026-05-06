@@ -431,7 +431,7 @@ func mapFormat(cfg *ProducerConfig) (*FormatterConfigMapper, error) {
 		// populate key
 		for _, v := range cfgFormatter.Key {
 			if _, ok := reMap[v]; !ok {
-				return formatterMapped, fmt.Errorf("key field %s does not exist", v)
+				return formatterMapped, &ErrKeyFieldNotFound{Field: v}
 			}
 			formatterMapped.key = append(formatterMapped.key, v)
 		}
@@ -444,7 +444,7 @@ func mapFormat(cfg *ProducerConfig) (*FormatterConfigMapper, error) {
 			if renderer, ok := renderers[v]; ok {
 				formatterMapped.render[k] = renderer
 			} else {
-				return formatterMapped, fmt.Errorf("field %s is not a renderer", v) // todo: make proper error
+				return formatterMapped, &ErrRendererNotFound{Renderer: string(v)}
 			}
 		}
 
@@ -457,7 +457,7 @@ func mapFormat(cfg *ProducerConfig) (*FormatterConfigMapper, error) {
 
 					// check if it's a virtual field
 					if _, ok := formatterMapped.render[field]; !ok {
-						return formatterMapped, fmt.Errorf("field %s in config not found in protobuf", field) // todo: make proper error
+						return formatterMapped, &ErrFieldNotFound{Field: field}
 					}
 
 				}
