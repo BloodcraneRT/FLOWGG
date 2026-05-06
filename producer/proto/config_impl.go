@@ -21,6 +21,33 @@ var (
 	}
 )
 
+// ErrKeyFieldNotFound is returned when a key field is not found.
+type ErrKeyFieldNotFound struct {
+	Field string
+}
+
+func (e *ErrKeyFieldNotFound) Error() string {
+	return fmt.Sprintf("key field %s does not exist", e.Field)
+}
+
+// ErrRendererNotFound is returned when a renderer is not found.
+type ErrRendererNotFound struct {
+	Renderer string
+}
+
+func (e *ErrRendererNotFound) Error() string {
+	return fmt.Sprintf("field %s is not a renderer", e.Renderer)
+}
+
+// ErrFieldNotFound is returned when a field is not found in the protobuf.
+type ErrFieldNotFound struct {
+	Field string
+}
+
+func (e *ErrFieldNotFound) Error() string {
+	return fmt.Sprintf("field %s in config not found in protobuf", e.Field)
+}
+
 type NetFlowMapField struct {
 	PenProvided bool   `yaml:"penprovided"`
 	Type        uint16 `yaml:"field"`
@@ -431,7 +458,7 @@ func mapFormat(cfg *ProducerConfig) (*FormatterConfigMapper, error) {
 		// populate key
 		for _, v := range cfgFormatter.Key {
 			if _, ok := reMap[v]; !ok {
-				return formatterMapped, fmt.Errorf("key field %s does not exist", v)
+				return formatterMapped, &ErrKeyFieldNotFound{Field: v}
 			}
 			formatterMapped.key = append(formatterMapped.key, v)
 		}
@@ -444,7 +471,7 @@ func mapFormat(cfg *ProducerConfig) (*FormatterConfigMapper, error) {
 			if renderer, ok := renderers[v]; ok {
 				formatterMapped.render[k] = renderer
 			} else {
-				return formatterMapped, fmt.Errorf("field %s is not a renderer", v) // todo: make proper error
+				return formatterMapped, &ErrRendererNotFound{Renderer: string(v)}
 			}
 		}
 
@@ -457,7 +484,7 @@ func mapFormat(cfg *ProducerConfig) (*FormatterConfigMapper, error) {
 
 					// check if it's a virtual field
 					if _, ok := formatterMapped.render[field]; !ok {
-						return formatterMapped, fmt.Errorf("field %s in config not found in protobuf", field) // todo: make proper error
+						return formatterMapped, &ErrFieldNotFound{Field: field}
 					}
 
 				}
